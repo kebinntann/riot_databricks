@@ -1,0 +1,31 @@
+# This is a Declarative Automation Bundle definition for riot.
+# The Databricks extension requires databricks.yml configuration file.
+# See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
+
+bundle:
+  name: riot
+
+include:
+  - resources/riot_ingestion.job.yml
+
+variables:
+  catalog:
+    default: riot
+  schema:
+    default: game
+  warehouse_id:
+    description: SQL warehouse ID for Gold transformations
+    default: "85fa3ad3f45b7e5f"
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://dbc-fd3c5336-e385.cloud.databricks.com
+
+  ## Optionally, there could be 'staging' or 'prod' targets here.
+  #
+  prod:
+    workspace:
+      host: https://dbc-fd3c5336-e385.cloud.databricks.com

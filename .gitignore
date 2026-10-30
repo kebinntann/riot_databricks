@@ -1,0 +1,40 @@
+.venv
+.vscode
+.env
+.databricks
+
+
+# Credentials
+.env
+.env.*
+!.env.example
+
+# Python virtual environment
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Testing and linting
+.pytest_cache/
+.ruff_cache/
+.coverage
+
+# Databricks bundle local artifacts
+.bundle/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Local raw data
+data/raw/
+data/processed/
+
+# Editor / OS files
+.vscode/
+.DS_Store
+Thumbs.db
