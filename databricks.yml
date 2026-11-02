@@ -6,8 +6,9 @@ bundle:
   name: riot
 
 include:
-  - resources/riot_ingestion.job.yml
-  - resources/riot_pipeline.job.yml
+  - resources/match_ingestion.job.yml
+  - resources/champion_pipeline.job.yml
+  - resources/match_pipeline.job.yml
 
 variables:
   catalog:
