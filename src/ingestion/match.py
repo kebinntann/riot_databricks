@@ -1,12 +1,12 @@
 import io
 import json
 import os
-
+#from dotenv import load_dotenv
 import requests
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.errors import NotFound, ResourceAlreadyExists
-from dotenv import load_dotenv
 from databricks.sdk.runtime import dbutils
+from databricks.sdk.errors import DatabricksError
 
 riot_api_key = dbutils.secrets.get(
     scope="riot-api",
@@ -23,15 +23,15 @@ databricks_token = dbutils.secrets.get(
     key="databricks-token",
 )
 
-load_dotenv()
+#load_dotenv()
 
 w = WorkspaceClient(
     host=databricks_host,
     token=databricks_token,
 )
 
-VOLUME_PATH = "/Volumes/riot/match/raw_files"
-puuid = os.getenv("puuid")
+VOLUME_PATH = "/Volumes/riot/match/raw_matches/matches"
+puuid  = 'zGdZUnRazdmRIbnRbbIiWD60orVMrUjvxnizFsE8GK6OY29-2VfUiFKjLQ-SsaahZcslE1fgck7HLA'
 # RIOT_API_KEY = os.getenv("RIOT_API_KEY")
 HEADERS = {"X-Riot-Token": riot_api_key}
 
@@ -108,17 +108,41 @@ def upload_match(match_id: str, match_data: dict) -> bool:
         print(f"Uploaded match: {match_id}")
         return True
 
-    except ResourceAlreadyExists:
-        print(f"Skipping existing match: {match_id}")
-        return False
+    except DatabricksError as exc:
+        # Only skip a confirmed file-exists conflict.
+        error_code = getattr(exc, "error_code", None)
+        status_code = getattr(exc, "status", None)
+        message = str(exc).lower()
 
-match_ids = get_match_ids(puuid)
+        is_existing_file = (
+            status_code == 409
+            or str(error_code).upper() in {
+                "RESOURCE_ALREADY_EXISTS",
+                "ALREADY_EXISTS",
+                "FILE_ALREADY_EXISTS",
+            }
+            or "filealreadyexists" in message
+            or "resource_already_exists" in message
+        )
 
-for match_id in match_ids:
-    '''
-    if match_exists(match_id):
-            print(f"Already ingested: {match_id}")
-            continue
-    '''
-    match_data = get_match(match_id)
-    upload_match(match_id, match_data)
+        if is_existing_file:
+            print(f"Skipped existing match: {match_id}")
+            return False
+
+        # Authentication, permissions, network errors, etc. still fail.
+        raise
+
+def main():
+    match_ids = get_match_ids(puuid)
+
+    for match_id in match_ids:
+        '''
+        if match_exists(match_id):
+                print(f"Already ingested: {match_id}")
+                continue
+        '''
+        match_data = get_match(match_id)
+        upload_match(match_id, match_data)
+
+if __name__ == "__main__":
+    main()
