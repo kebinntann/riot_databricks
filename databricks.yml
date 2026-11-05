@@ -29,5 +29,6 @@ targets:
   ## Optionally, there could be 'staging' or 'prod' targets here.
   #
   prod:
+    mode: production
     workspace:
       host: https://dbc-fd3c5336-e385.cloud.databricks.com

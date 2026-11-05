@@ -23,17 +23,31 @@ databricks_token = dbutils.secrets.get(
     key="databricks-token",
 )
 
-#load_dotenv()
-
 w = WorkspaceClient(
     host=databricks_host,
     token=databricks_token,
 )
 
-VOLUME_PATH = "/Volumes/riot/match/raw_matches/matches"
-puuid  = 'zGdZUnRazdmRIbnRbbIiWD60orVMrUjvxnizFsE8GK6OY29-2VfUiFKjLQ-SsaahZcslE1fgck7HLA'
-# RIOT_API_KEY = os.getenv("RIOT_API_KEY")
 HEADERS = {"X-Riot-Token": riot_api_key}
+VOLUME_PATH = "/Volumes/riot/match/raw_matches/matches"
+
+#puuid  = 'zGdZUnRazdmRIbnRbbIiWD60orVMrUjvxnizFsE8GK6OY29-2VfUiFKjLQ-SsaahZcslE1fgck7HLA'
+queue = "RANKED_SOLO_5x5"
+
+def get_puuid(queue: str) -> list[str]:
+    url = (
+        "https://NA1.api.riotgames.com"
+        f"/lol/league/v4/challengerleagues/by-queue/{queue}"
+    )
+
+    response = requests.get(
+        url,
+        headers=HEADERS,
+        timeout=30,
+    )
+    response.raise_for_status()
+
+    return [entry["puuid"] for entry in response.json()["entries"][100:110]]
 
 def get_match_ids(puuid: str) -> list[str]:
     url = (
@@ -44,7 +58,7 @@ def get_match_ids(puuid: str) -> list[str]:
     response = requests.get(
         url,
         headers=HEADERS,
-        params={"start": 0, "count": 20},
+        params={"start": 0, "count": 3},
         timeout=30,
     )
     response.raise_for_status()
@@ -133,7 +147,11 @@ def upload_match(match_id: str, match_data: dict) -> bool:
         raise
 
 def main():
-    match_ids = get_match_ids(puuid)
+    puuids = get_puuid(queue)
+
+    match_ids = []
+    for puuid in puuids:
+        match_ids.extend(get_match_ids(puuid))
 
     for match_id in match_ids:
         '''
